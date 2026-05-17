@@ -9,8 +9,8 @@ app.use('/', require('./routes/auth.routes'));
 // Notes routes
 app.use('/notes', require('./routes/notes.routes'));
 
-// Phase 6: Meta (uncommented when phase is built)
-// app.use('/', require('./routes/meta.routes'));
+// Meta routes
+app.use('/', require('./routes/meta.routes'));
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
