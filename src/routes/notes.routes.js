@@ -9,6 +9,7 @@ const {
   updateNote,
   deleteNote,
   shareNote,
+  pinNote,
 } = require('../controllers/notes.controller');
 
 const router = Router();
@@ -38,6 +39,14 @@ router.post(
   [body('share_with_email').isEmail().withMessage('Valid email is required')],
   validate,
   shareNote
+);
+
+router.patch(
+  '/:id/pin',
+  authenticate,
+  [body('isPinned').isBoolean().withMessage('isPinned must be a boolean')],
+  validate,
+  pinNote
 );
 
 module.exports = router;

@@ -155,4 +155,30 @@ const shareNote = async (req, res) => {
   }
 };
 
-module.exports = { getAllNotes, getNoteById, createNote, updateNote, deleteNote, shareNote };
+const pinNote = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isPinned } = req.body;
+
+    if (!isValidId(id)) {
+      return res.status(400).json({ message: 'Invalid note ID format' });
+    }
+
+    const note = await Note.findOneAndUpdate(
+      { _id: id, owner: req.user.id },
+      { isPinned },
+      { new: true, runValidators: true }
+    );
+
+    if (!note) {
+      return res.status(404).json({ message: 'Note not found' });
+    }
+
+    return res.status(200).json(formatNote(note));
+  } catch (err) {
+    console.error('pinNote error:', err.message);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+module.exports = { getAllNotes, getNoteById, createNote, updateNote, deleteNote, shareNote, pinNote };
