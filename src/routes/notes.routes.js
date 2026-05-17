@@ -8,6 +8,7 @@ const {
   createNote,
   updateNote,
   deleteNote,
+  shareNote,
 } = require('../controllers/notes.controller');
 
 const router = Router();
@@ -30,5 +31,13 @@ router.post('/', authenticate, noteBodyRules, validate, createNote);
 router.put('/:id', authenticate, noteBodyRules, validate, updateNote);
 
 router.delete('/:id', authenticate, deleteNote);
+
+router.post(
+  '/:id/share',
+  authenticate,
+  [body('share_with_email').isEmail().withMessage('Valid email is required')],
+  validate,
+  shareNote
+);
 
 module.exports = router;

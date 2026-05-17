@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Note = require('../models/Note');
+const User = require('../models/User');
 const { formatNote } = require('../utils/response');
 
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
@@ -114,4 +115,44 @@ const deleteNote = async (req, res) => {
   }
 };
 
-module.exports = { getAllNotes, getNoteById, createNote, updateNote, deleteNote };
+const shareNote = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { share_with_email } = req.body;
+
+    if (!isValidId(id)) {
+      return res.status(400).json({ message: 'Invalid note ID format' });
+    }
+
+    const note = await Note.findOne({ _id: id, owner: req.user.id });
+    if (!note) {
+      return res.status(404).json({ message: 'Note not found' });
+    }
+
+    const targetUser = await User.findOne({ email: share_with_email });
+    if (!targetUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (targetUser._id.toString() === req.user.id) {
+      return res.status(400).json({ message: 'Cannot share note with yourself' });
+    }
+
+    const alreadyShared = note.sharedWith.some(
+      (uid) => uid.toString() === targetUser._id.toString()
+    );
+    if (alreadyShared) {
+      return res.status(400).json({ message: 'Note already shared with this user' });
+    }
+
+    note.sharedWith.push(targetUser._id);
+    await note.save();
+
+    return res.status(200).json({ message: 'Note shared successfully' });
+  } catch (err) {
+    console.error('shareNote error:', err.message);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+module.exports = { getAllNotes, getNoteById, createNote, updateNote, deleteNote, shareNote };
