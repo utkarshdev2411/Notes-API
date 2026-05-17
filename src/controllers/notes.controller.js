@@ -7,13 +7,41 @@ const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 const getAllNotes = async (req, res) => {
   try {
-    const notes = await Note.find({
+    const query = {
       $or: [
         { owner: req.user.id },
         { sharedWith: req.user.id },
       ],
-    }).sort({ isPinned: -1, updatedAt: -1 });
+    };
 
+    const { page, limit } = req.query;
+    const isPaginated = page !== undefined || limit !== undefined;
+
+    if (isPaginated) {
+      const pageNum = Math.max(parseInt(page) || 1, 1);
+      const limitNum = Math.min(parseInt(limit) || 10, 100);
+      const skip = (pageNum - 1) * limitNum;
+
+      const [notes, total] = await Promise.all([
+        Note.find(query)
+          .sort({ isPinned: -1, updatedAt: -1 })
+          .skip(skip)
+          .limit(limitNum),
+        Note.countDocuments(query),
+      ]);
+
+      return res.status(200).json({
+        data: notes.map(formatNote),
+        pagination: {
+          total,
+          page: pageNum,
+          limit: limitNum,
+          totalPages: Math.ceil(total / limitNum),
+        },
+      });
+    }
+
+    const notes = await Note.find(query).sort({ isPinned: -1, updatedAt: -1 });
     return res.status(200).json(notes.map(formatNote));
   } catch (err) {
     console.error('getAllNotes error:', err.message);
@@ -181,4 +209,27 @@ const pinNote = async (req, res) => {
   }
 };
 
-module.exports = { getAllNotes, getNoteById, createNote, updateNote, deleteNote, shareNote, pinNote };
+const searchNotes = async (req, res) => {
+  try {
+    const { q } = req.query;
+
+    if (!q || !q.trim()) {
+      return res.status(400).json({ message: 'Search query is required' });
+    }
+
+    const notes = await Note.find({
+      $text: { $search: q },
+      $or: [
+        { owner: req.user.id },
+        { sharedWith: req.user.id },
+      ],
+    }).sort({ isPinned: -1, updatedAt: -1 });
+
+    return res.status(200).json(notes.map(formatNote));
+  } catch (err) {
+    console.error('searchNotes error:', err.message);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+module.exports = { getAllNotes, getNoteById, createNote, updateNote, deleteNote, shareNote, pinNote, searchNotes };

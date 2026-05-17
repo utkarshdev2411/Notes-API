@@ -1,5 +1,7 @@
 const { Router } = require('express');
 const openApiSpec = require('../openapi.json');
+const authenticate = require('../middleware/auth.middleware');
+const { searchNotes } = require('../controllers/notes.controller');
 
 const router = Router();
 
@@ -18,5 +20,7 @@ router.get('/about', (req, res) => {
 router.get('/openapi.json', (req, res) => {
   return res.status(200).json(openApiSpec);
 });
+
+router.get('/search', authenticate, searchNotes);
 
 module.exports = router;
