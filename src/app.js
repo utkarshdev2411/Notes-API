@@ -6,8 +6,8 @@ app.use(express.json());
 // Auth routes
 app.use('/', require('./routes/auth.routes'));
 
-// Phase 3-5: Notes (uncommented when phase is built)
-// app.use('/notes', require('./routes/notes.routes'));
+// Notes routes
+app.use('/notes', require('./routes/notes.routes'));
 
 // Phase 6: Meta (uncommented when phase is built)
 // app.use('/', require('./routes/meta.routes'));
