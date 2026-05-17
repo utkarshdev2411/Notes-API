@@ -27,7 +27,8 @@ const getAllNotes = async (req, res) => {
           .sort({ isPinned: -1, updatedAt: -1 })
           .skip(skip)
           .limit(limitNum),
-        Note.countDocuments(query),
+        // countDocuments does not trigger pre-find middleware, so isDeleted must be explicit
+        Note.countDocuments({ ...query, isDeleted: false }),
       ]);
 
       return res.status(200).json({
@@ -78,11 +79,12 @@ const getNoteById = async (req, res) => {
 
 const createNote = async (req, res) => {
   try {
-    const { title, content } = req.body;
+    const { title, content, tags } = req.body;
 
     const note = await Note.create({
       title,
       content,
+      tags: Array.isArray(tags) ? tags : [],
       owner: req.user.id,
     });
 
@@ -96,15 +98,18 @@ const createNote = async (req, res) => {
 const updateNote = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, content } = req.body;
+    const { title, content, tags } = req.body;
 
     if (!isValidId(id)) {
       return res.status(400).json({ message: 'Invalid note ID format' });
     }
 
+    const updateFields = { title, content };
+    if (Array.isArray(tags)) updateFields.tags = tags;
+
     const note = await Note.findOneAndUpdate(
       { _id: id, owner: req.user.id },
-      { title, content },
+      updateFields,
       { new: true, runValidators: true }
     );
 
