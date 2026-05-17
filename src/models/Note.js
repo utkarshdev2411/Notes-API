@@ -45,9 +45,8 @@ const noteSchema = new mongoose.Schema(
 );
 
 // Automatically exclude soft-deleted notes from all find queries
-noteSchema.pre(/^find/, function (next) {
+noteSchema.pre(/^find/, async function () {
   this.where({ isDeleted: false });
-  next();
 });
 
 // Text index for full-text search (Phase 7)

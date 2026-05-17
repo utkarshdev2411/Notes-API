@@ -110,7 +110,7 @@ const updateNote = async (req, res) => {
     const note = await Note.findOneAndUpdate(
       { _id: id, owner: req.user.id },
       updateFields,
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
 
     if (!note) {
@@ -200,7 +200,7 @@ const pinNote = async (req, res) => {
     const note = await Note.findOneAndUpdate(
       { _id: id, owner: req.user.id },
       { isPinned },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
 
     if (!note) {
